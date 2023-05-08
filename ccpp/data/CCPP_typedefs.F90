@@ -184,7 +184,6 @@ module CCPP_typedefs
     integer,               pointer      :: idxday(:)          => null()  !<
     logical,               pointer      :: icy(:)             => null()  !<
     logical,               pointer      :: lake(:)            => null()  !<
-    logical,               pointer      :: use_flake(:)       => null()  !<
     logical,               pointer      :: ocean(:)           => null()  !<
     integer                             :: ipr                           !<
     integer,               pointer      :: islmsk(:)          => null()  !<
@@ -249,7 +248,7 @@ module CCPP_typedefs
     real (kind=kind_phys), pointer      :: qss_ice(:)         => null()  !<
     real (kind=kind_phys), pointer      :: qss_land(:)        => null()  !<
     real (kind=kind_phys), pointer      :: qss_water(:)       => null()  !<
-    logical                             :: radar_reset                   !<
+    logical                             :: fullradar_diag                !<
     real (kind=kind_phys)               :: raddt                         !<
     real (kind=kind_phys), pointer      :: rainmp(:)          => null()  !<
     real (kind=kind_phys), pointer      :: raincd(:)          => null()  !<
@@ -647,7 +646,6 @@ contains
     allocate (Interstitial%idxday          (IM))
     allocate (Interstitial%icy             (IM))
     allocate (Interstitial%lake            (IM))
-    allocate (Interstitial%use_flake       (IM))
     allocate (Interstitial%ocean           (IM))
     allocate (Interstitial%islmsk          (IM))
     allocate (Interstitial%islmsk_cice     (IM))
@@ -1327,7 +1325,6 @@ contains
     Interstitial%dry             = .false.
     Interstitial%icy             = .false.
     Interstitial%lake            = .false.
-    Interstitial%use_flake       = .false.
     Interstitial%ocean           = .false.
     Interstitial%islmsk          = 0
     Interstitial%islmsk_cice     = 0
@@ -1478,11 +1475,11 @@ contains
     ! Use same logic in UFS to reset Thompson extended diagnostics
     Interstitial%ext_diag_thompson_reset = Interstitial%max_hourly_reset
     !
-    ! Set flag for resetting radar reflectivity calculation
-    if (Model%nsradar_reset<0) then
-      Interstitial%radar_reset = .true.
+    ! Frequency flag for computing the full radar reflectivity (water coated ice) 
+    if (Model%nsfullradar_diag<0) then
+      Interstitial%fullradar_diag = .true.
     else
-      Interstitial%radar_reset = mod(Model%kdt-1, nint(Model%nsradar_reset/Model%dtp)) == 0
+      Interstitial%fullradar_diag = (Model%kdt == 1 .or. mod(Model%kdt, nint(Model%nsfullradar_diag/Model%dtp)) == 0) 
     end if
     !
   end subroutine gfs_interstitial_phys_reset
